@@ -1,0 +1,1 @@
+# Fast-Whisper-Transcriber-CPU-Optimized-
