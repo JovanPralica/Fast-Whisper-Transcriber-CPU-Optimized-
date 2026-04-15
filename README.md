@@ -26,7 +26,7 @@ Model architecture
 
 Whisper uses a Transformer sequence-to-sequence model.
 
-Instead of separate pipelines (ASR, translation, detection), it:
+Instead of separate pipelines, it:
 
 Encodes audio → tokens
 Uses a decoder to predict:
@@ -38,7 +38,7 @@ All tasks are handled in a single unified model using special tokens.
 
 Why this implementation is faster
 
-This project does NOT use standard openai-whisper for inference.
+This project does not use standard openai-whisper for inference.
 
 Instead, it uses:
 
@@ -50,23 +50,23 @@ Key optimizations
 INT8 quantization → major CPU speedup
 Chunked processing → avoids memory spikes
 Model loaded once → reused across files
-Optional language forcing → skips detection step
-Sequential chunk processing → stable for large files
+Forced language option → skips detection step
+Sequential chunking → stable for large files
 Result
 
 Compared to standard Whisper:
 
-~2x to 4x faster on CPU
+~2x–4x faster on CPU
 Lower memory usage
 More stable on large files
 Why Anaconda is the best way to run this
 
-Using Anaconda (or Miniconda) gives:
+Using Anaconda (or Miniconda) provides:
 
-Clean isolated environment (no dependency conflicts)
-Easy Python version control
-Reliable package management
-No system pollution
+Isolated environment → no dependency conflicts
+Controlled Python version
+Stable package management
+Clean system (no pollution)
 Recommended setup
 conda create -n whisper_env python=3.10
 conda activate whisper_env
@@ -76,23 +76,19 @@ This avoids:
 
 broken dependencies
 PATH issues
-version conflicts with PyTorch / tokenizers
+PyTorch / tokenizer conflicts
 Requirements
 Python
 3.8 – 3.11 supported
-FFmpeg (required)
-
-Install depending on OS:
-
-Windows (recommended):
-
+FFmpeg (REQUIRED)
+Windows (recommended)
 choco install ffmpeg
 
 or
 
 scoop install ffmpeg
 
-Verify:
+Verify installation:
 
 ffmpeg -version
 ffprobe -version
@@ -103,7 +99,7 @@ base	fast	good
 small	medium	very good
 medium	slow	high
 large	slowest	highest
-Recommended (CPU)
+Recommended for CPU
 -m base --compute-type int8 --beam-size 1
 Input Support
 
@@ -113,7 +109,7 @@ Single file
 python fast_transcribe.py file.mp3
 Multiple files
 python fast_transcribe.py file1.mp3 file2.mp3
-Entire folder
+Entire folder (recommended)
 python fast_transcribe.py "C:\AudioFolder"
 
 Supported formats:
@@ -129,13 +125,13 @@ Output: .txt
 
 Options:
 
-plain text
-optional timestamps
+Plain text
+Optional timestamps
 2. Subtitle Mode
 
 Output: .srt
 
-Format:
+Example:
 
 1
 00:00:01,000 --> 00:00:03,000
@@ -145,7 +141,7 @@ Compatible with:
 
 VLC
 YouTube
-Premiere
+Premiere Pro
 CapCut
 Translation
 
@@ -154,28 +150,29 @@ Whisper supports:
 Same-language transcription
 Translation → English only
 
-Example:
+Examples:
 
-Russian → English subtitles ✅
-Serbian → English subtitles ✅
-Serbian → German ❌ (requires external model)
+Russian → English subtitles (supported)
+Serbian → English subtitles (supported)
+Serbian → German (not supported without external tools)
 How it works
-Converts audio → 16kHz mono WAV
-Splits into chunks (default: 300 seconds)
-Processes each chunk with Whisper
-Reconstructs full output
-Saves:
-.txt or .srt
+Convert audio → 16kHz mono WAV
+Split into chunks (default: 300 seconds)
+Transcribe each chunk
+Reconstruct full output
+Save as:
+.txt (transcript)
+.srt (subtitles)
 Usage
 Recommended command
 python fast_transcribe.py "C:\YourFolder" -m base --compute-type int8 --beam-size 1 --language sr --chunk-seconds 300
 Parameters
 Argument	Description
 -m	Model size
---compute-type	Use int8 for CPU
---beam-size	1 = fastest
+--compute-type	Use int8 for CPU performance
+--beam-size	1 = fastest decoding
 --language	Force language (recommended)
---chunk-seconds	Split size
+--chunk-seconds	Chunk size for large files
 Language selection
 
 Examples:
@@ -184,18 +181,20 @@ Examples:
 --language en   # English
 --language ru   # Russian
 
-For Balkan languages, always specify manually for best results.
+Recommendation:
+Always specify language for better accuracy and speed.
 
-Notes on official Whisper vs this setup
-Official (openai-whisper)
-Simpler
-Slower
+Official Whisper vs This Setup
+openai-whisper (standard)
+Simpler usage
+Slower inference
 Loads full audio
 Higher RAM usage
-This project
+This project (optimized)
 Faster inference engine
 Chunked processing
-Better for long audio
+Lower memory usage
+Better for long files
 More control over performance
 Summary
 
@@ -207,10 +206,3 @@ Batch workflows
 Stability
 
 If standard Whisper is slow or crashes on large files, this approach solves those issues.
-
-If you want next upgrade:
-
-parallel processing (multi-core CPU)
-translation to any language (not just English)
-
-I can extend the script further.
