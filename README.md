@@ -1,7 +1,5 @@
 Fast Whisper Transcriber
 
-[Blog] [Paper] [Model card] [Colab example]
-
 Fast Whisper Transcriber is a high-performance speech recognition and subtitle generation tool built on top of Whisper. It is optimized for CPU usage, large audio files, and batch processing, using the faster-whisper backend.
 
 It supports:
