@@ -1,137 +1,131 @@
-Fast Whisper Transcriber (CPU Optimized)
-Overview
+Fast Whisper Transcriber
 
-This project is a high-performance transcription and subtitle generator built on top of:
+[Blog] [Paper] [Model card] [Colab example]
 
-faster-whisper (CTranslate2 backend)
-OpenAI Whisper model architecture
-
-It is designed for:
-
-Large audio files
-Batch processing (multiple files / folders)
-CPU-only environments
-Fast and stable transcription
-What is Whisper?
-
-Whisper is a general-purpose speech recognition model trained on a large and diverse dataset of audio.
+Fast Whisper Transcriber is a high-performance speech recognition and subtitle generation tool built on top of Whisper. It is optimized for CPU usage, large audio files, and batch processing, using the faster-whisper backend.
 
 It supports:
 
-Multilingual speech recognition
-Speech translation
-Language identification
-Voice activity detection
-Model architecture
+multilingual transcription
+subtitle generation (.srt)
+translation to English
+processing multiple files or entire folders
 
-Whisper uses a Transformer sequence-to-sequence model.
+Compared to the standard Whisper implementation, this setup is designed to be significantly faster and more stable, especially on CPU-only systems.
 
-Instead of separate pipelines, it:
+Approach
 
-Encodes audio → tokens
-Uses a decoder to predict:
-text
-language
-task (transcribe / translate)
+A Transformer sequence-to-sequence model (Whisper) is used for speech processing tasks including:
 
-All tasks are handled in a single unified model using special tokens.
+multilingual speech recognition
+speech translation
+language identification
+voice activity detection
 
-Why this implementation is faster
+These tasks are represented as a sequence of tokens predicted by the decoder, allowing a single model to replace traditional multi-stage pipelines.
 
-This project does not use standard openai-whisper for inference.
+This project uses:
 
-Instead, it uses:
+faster-whisper (CTranslate2 backend) for optimized inference
+INT8 quantization for CPU acceleration
+chunked processing for large audio files
 
-faster-whisper
-Built on CTranslate2
-Optimized inference engine
-Supports quantization
-Key optimizations
-INT8 quantization → major CPU speedup
-Chunked processing → avoids memory spikes
-Model loaded once → reused across files
-Forced language option → skips detection step
-Sequential chunking → stable for large files
-Result
+Instead of processing the entire file at once, audio is:
 
-Compared to standard Whisper:
+converted to 16kHz mono
+split into chunks (default: 300 seconds)
+processed sequentially
+reconstructed into final output
 
-~2x–4x faster on CPU
-Lower memory usage
-More stable on large files
-Why Anaconda is the best way to run this
+This avoids memory issues and improves performance on long recordings.
 
-Using Anaconda (or Miniconda) provides:
+Setup
 
-Isolated environment → no dependency conflicts
-Controlled Python version
-Stable package management
-Clean system (no pollution)
-Recommended setup
+The original Whisper setup uses:
+
+Python 3.8–3.11
+PyTorch
+tiktoken
+
+However, this project is designed to run more efficiently using Anaconda + faster-whisper.
+
+Recommended (best setup)
 conda create -n whisper_env python=3.10
 conda activate whisper_env
 pip install faster-whisper
 
-This avoids:
+This is the recommended way to run the project, because it provides:
 
-broken dependencies
-PATH issues
-PyTorch / tokenizer conflicts
-Requirements
-Python
-3.8 – 3.11 supported
-FFmpeg (REQUIRED)
-Windows (recommended)
+isolated environment (no dependency conflicts)
+stable package versions
+cleaner installation process
+better compatibility with CTranslate2
+FFmpeg (required)
+
+Install ffmpeg:
+
+# Ubuntu / Debian
+sudo apt update && sudo apt install ffmpeg
+
+# Arch Linux
+sudo pacman -S ffmpeg
+
+# MacOS
+brew install ffmpeg
+
+# Windows (Chocolatey)
 choco install ffmpeg
 
-or
-
+# Windows (Scoop)
 scoop install ffmpeg
 
 Verify installation:
 
 ffmpeg -version
 ffprobe -version
-Supported Models
-Model	Speed	Accuracy
-tiny	fastest	lowest
-base	fast	good
-small	medium	very good
-medium	slow	high
-large	slowest	highest
+Available models and performance
+
+Whisper provides multiple model sizes with speed/accuracy tradeoffs:
+
+Size	Parameters	Speed	Accuracy
+tiny	39M	fastest	lowest
+base	74M	fast	good
+small	244M	medium	very good
+medium	769M	slow	high
+large	1550M	slowest	highest
 Recommended for CPU
 -m base --compute-type int8 --beam-size 1
-Input Support
 
-You can pass:
+This provides the best balance of:
 
-Single file
-python fast_transcribe.py file.mp3
-Multiple files
+speed
+accuracy
+memory usage
+Command-line usage
+
+Process a single file:
+
+python fast_transcribe.py audio.mp3
+
+Process multiple files:
+
 python fast_transcribe.py file1.mp3 file2.mp3
-Entire folder (recommended)
-python fast_transcribe.py "C:\AudioFolder"
 
-Supported formats:
+Process an entire folder:
 
-.mp3
-.wav
-.m4a
-.mp4
-Output Modes
-1. Transcript Mode
+python fast_transcribe.py "C:\YourFolder"
+Recommended command (optimized)
+python fast_transcribe.py "C:\YourFolder" -m base --compute-type int8 --beam-size 1 --language sr --chunk-seconds 300
+Output modes
+Transcript mode
 
-Output: .txt
+Outputs .txt files:
 
-Options:
+plain text
+optional timestamps
+Subtitle mode
 
-Plain text
-Optional timestamps
-2. Subtitle Mode
-
-Output: .srt
-
-Example:
+Outputs .srt files:
 
 1
 00:00:01,000 --> 00:00:03,000
@@ -145,64 +139,58 @@ Premiere Pro
 CapCut
 Translation
 
-Whisper supports:
+Supports:
 
-Same-language transcription
-Translation → English only
+same-language transcription
+translation → English
 
 Examples:
 
 Russian → English subtitles (supported)
 Serbian → English subtitles (supported)
 Serbian → German (not supported without external tools)
-How it works
-Convert audio → 16kHz mono WAV
-Split into chunks (default: 300 seconds)
-Transcribe each chunk
-Reconstruct full output
-Save as:
-.txt (transcript)
-.srt (subtitles)
-Usage
-Recommended command
-python fast_transcribe.py "C:\YourFolder" -m base --compute-type int8 --beam-size 1 --language sr --chunk-seconds 300
-Parameters
-Argument	Description
--m	Model size
---compute-type	Use int8 for CPU performance
---beam-size	1 = fastest decoding
---language	Force language (recommended)
---chunk-seconds	Chunk size for large files
 Language selection
 
-Examples:
+You can manually set language:
 
 --language sr   # Serbian
 --language en   # English
 --language ru   # Russian
 
-Recommendation:
-Always specify language for better accuracy and speed.
+Specifying language:
 
-Official Whisper vs This Setup
-openai-whisper (standard)
-Simpler usage
-Slower inference
-Loads full audio
-Higher RAM usage
-This project (optimized)
-Faster inference engine
-Chunked processing
-Lower memory usage
-Better for long files
-More control over performance
+improves accuracy
+reduces startup time
+Python usage
+
+Example using Whisper directly:
+
+import whisper
+
+model = whisper.load_model("base")
+result = model.transcribe("audio.mp3")
+print(result["text"])
+
+This project uses an optimized pipeline instead of processing full audio at once.
+
+How this differs from standard Whisper
+Standard Whisper
+slower on CPU
+processes entire file
+higher memory usage
+This project
+faster inference (faster-whisper)
+chunked processing
+lower memory usage
+better for large files
+batch processing support
 Summary
 
-This setup is optimized for:
+This project is optimized for:
 
-CPU performance
-Large audio files
-Batch workflows
-Stability
+CPU-based systems
+large audio files
+multiple file workflows
+stable transcription
 
-If standard Whisper is slow or crashes on large files, this approach solves those issues.
+It is the recommended approach if standard Whisper is too slow or unstable on your machine.
